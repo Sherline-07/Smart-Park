@@ -1,0 +1,4 @@
+bin/ 
+*.class 
+*.mv.db 
+*.trace.db 
