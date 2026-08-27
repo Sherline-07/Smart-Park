@@ -46,17 +46,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 10000);
 });
 
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("sidebarWrapper");
+    if (sidebar) {
+        sidebar.classList.toggle("mobile-open");
+    }
+}
+
 /* =========================================================
    TAB SWITCHING
    ========================================================= */
 function switchTab(tabId) {
-    document.querySelectorAll(".nav-link").forEach(btn => {
+    document.querySelectorAll(".nav-link, .sidebar-item").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tabId);
     });
 
     document.querySelectorAll(".tab-content").forEach(tab => {
         tab.classList.toggle("active", tab.id === `tab-${tabId}`);
     });
+
+    const sidebar = document.getElementById("sidebarWrapper");
+    if (sidebar) {
+        sidebar.classList.remove("mobile-open");
+    }
 
     if (tabId === "dashboard") {
         refreshDashboard();
@@ -387,14 +399,42 @@ function renderSlotsGrid() {
     }
 
     container.innerHTML = filtered.map(slot => `
-        <div class="slot-box ${slot.status}">
+        <div class="slot-box ${slot.status}" onclick="toggleSlotMaintenance(${slot.slotId}, '${escapeHtml(slot.slotNumber)}', '${slot.status}')" style="cursor: pointer;" title="Click to toggle Maintenance mode">
             <div class="slot-cat-badge">
-                <i class="fa-solid ${slot.vehicleType === '4W' ? 'fa-car' : 'fa-motorcycle'}"></i> ${slot.vehicleType} • Floor ${slot.floorLevel}
+                <i class="fa-solid ${slot.status === 'MAINTENANCE' ? 'fa-wrench' : (slot.vehicleType === '4W' ? 'fa-car' : 'fa-motorcycle')}"></i> ${slot.vehicleType} • Floor ${slot.floorLevel}
             </div>
             <div class="slot-number">${escapeHtml(slot.slotNumber)}</div>
             <span class="slot-status-pill">${slot.status}</span>
         </div>
     `).join("");
+}
+
+async function toggleSlotMaintenance(slotId, slotNumber, currentStatus) {
+    if (currentStatus === 'OCCUPIED') {
+        showToast(`Slot ${slotNumber} is currently OCCUPIED and cannot be set to maintenance.`, 'error');
+        return;
+    }
+
+    const action = currentStatus === 'MAINTENANCE' ? 're-activate as AVAILABLE' : 'lock under MAINTENANCE';
+    if (!confirm(`Do you want to ${action} for Slot ${slotNumber}?`)) return;
+
+    try {
+        const res = await fetch('/api/slots/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slotId: slotId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showToast(data.message, 'success');
+            fetchSlots();
+            refreshDashboard();
+        } else {
+            showToast(data.message || 'Failed to update slot status.', 'error');
+        }
+    } catch (e) {
+        showToast('Error communicating with server.', 'error');
+    }
 }
 
 /* =========================================================

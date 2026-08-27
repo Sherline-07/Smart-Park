@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadSlotsData();
     loadUserTickets();
+    loadUserSavedVehicles();
 });
 
 function handleUserLogout() {
@@ -354,8 +355,119 @@ function showTicketModal(code, vehicle, slot, dateTime, fee) {
     document.getElementById('modalDateTime').textContent = dateTime || 'Immediate';
     document.getElementById('modalFee').textContent = '₹' + parseFloat(fee).toFixed(2);
     document.getElementById('ticketModal').style.display = 'flex';
+
+    drawQrCodeCanvas('ticketQrCanvas', code + '|' + vehicle + '|' + slot);
 }
 
 function closeTicketModal() {
     document.getElementById('ticketModal').style.display = 'none';
+}
+
+async function loadUserSavedVehicles() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch('/api/user/vehicles/list?userId=' + currentUser.userId);
+        const data = await res.json();
+        const select = document.getElementById('walletSelect');
+        if (data.success && data.vehicles) {
+            let html = '<option value="">-- Pick Saved Vehicle --</option>';
+            data.vehicles.forEach(v => {
+                html += `<option value="${v.vehicleNumber}|${v.vehicleType}">${v.vehicleNumber} (${v.vehicleType})</option>`;
+            });
+            select.innerHTML = html;
+        }
+    } catch (e) {
+        console.error('Failed to load wallet vehicles:', e);
+    }
+}
+
+function selectWalletVehicle(val) {
+    if (!val) return;
+    const [plate, type] = val.split('|');
+    document.getElementById('bookVehicleNumber').value = plate;
+    document.getElementById('bookVehicleType').value = type;
+    loadAvailableSlotsForBooking();
+}
+
+function drawQrCodeCanvas(canvasId, text) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.fillStyle = '#04111d';
+    ctx.fillRect(0, 0, size, size);
+
+    // Draw QR pattern blocks
+    const gridCount = 21;
+    const cellSize = Math.floor(size / gridCount);
+    ctx.fillStyle = '#00e5ff';
+
+    // Helper for hash
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+        hash = (hash << 5) - hash + text.charCodeAt(i);
+        hash |= 0;
+    }
+
+    for (let r = 0; r < gridCount; r++) {
+        for (let c = 0; c < gridCount; c++) {
+            // Position finder patterns (corners)
+            const isCorner = (r < 7 && c < 7) || (r < 7 && c >= gridCount - 7) || (r >= gridCount - 7 && c < 7);
+            if (isCorner) {
+                const isOuter = r === 0 || r === 6 || c === 0 || c === 6 || r === gridCount - 1 || r === gridCount - 7 || c === gridCount - 1 || c === gridCount - 7;
+                const isInner = (r >= 2 && r <= 4 && c >= 2 && c <= 4) || (r >= 2 && r <= 4 && c >= gridCount - 5 && c >= gridCount - 3) || (r >= gridCount - 5 && c >= 2 && c <= 4);
+                if (isOuter || isInner) {
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                }
+            } else {
+                const pseudoBit = ((hash ^ (r * 31 + c * 17)) & 1) === 1;
+                if (pseudoBit) {
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+    }
+}
+
+function openAddVehicleModal() {
+    document.getElementById('addVehicleModal').style.display = 'flex';
+}
+
+function closeAddVehicleModal() {
+    document.getElementById('addVehicleModal').style.display = 'none';
+}
+
+async function handleSaveVehicleSubmit(event) {
+    event.preventDefault();
+    const vehicleNumber = document.getElementById('walletVehicleNumber').value.trim();
+    const vehicleType = document.getElementById('walletVehicleType').value;
+
+    if (!currentUser || !vehicleNumber) return;
+
+    try {
+        const response = await fetch('/api/user/vehicles/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: currentUser.userId,
+                vehicleNumber, vehicleType
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showUserAlert(data.message, 'success');
+            closeAddVehicleModal();
+            loadUserSavedVehicles();
+            document.getElementById('bookVehicleNumber').value = vehicleNumber;
+            document.getElementById('bookVehicleType').value = vehicleType;
+            loadAvailableSlotsForBooking();
+        } else {
+            showUserAlert(data.message || 'Failed to save vehicle.', 'error');
+        }
+    } catch (e) {
+        showUserAlert('Failed to connect to server.', 'error');
+    }
 }

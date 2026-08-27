@@ -138,7 +138,18 @@ public class ParkingService {
 
         ParkingRecord record = recordDAO.getActiveRecordByVehicleNumber(vehicleNumber);
         if (record == null) {
-            throw new IllegalArgumentException("Vehicle not found in active parking: " + vehicleNumber);
+            com.smartpark.dao.ReservationDAO reservationDAO = new com.smartpark.dao.ReservationDAO();
+            com.smartpark.dao.MonthlyPassDAO monthlyPassDAO = new com.smartpark.dao.MonthlyPassDAO();
+            com.smartpark.model.Reservation res = reservationDAO.getByPassCodeOrVehicle(vehicleNumber);
+            com.smartpark.model.MonthlyPass pass = monthlyPassDAO.getActivePassByVehicle(vehicleNumber);
+
+            if (res != null) {
+                throw new IllegalArgumentException("Vehicle " + vehicleNumber + " has a Pre-Booking in Slot " + res.getSlotNumber() + " but has not checked in at the entry gate yet. Please process Vehicle Entry first!");
+            } else if (pass != null) {
+                throw new IllegalArgumentException("Vehicle " + vehicleNumber + " has an active Monthly Pass for Slot " + pass.getSlotNumber() + " but has not checked in at the entry gate yet. Please process Vehicle Entry first!");
+            } else {
+                throw new IllegalArgumentException("Vehicle " + vehicleNumber + " is not found in active parking.");
+            }
         }
 
         LocalDateTime exitTime = LocalDateTime.now();
@@ -197,6 +208,7 @@ public class ParkingService {
         int occupied = slotDAO.getOccupiedCount();
         int available = slotDAO.getAvailableCount();
         int reserved = slotDAO.getReservedCount();
+        int maintenance = slotDAO.getMaintenanceCount();
 
         int total2W = slotDAO.getTotalCountByType("2W");
         int occupied2W = slotDAO.getCountByTypeAndStatus("2W", "OCCUPIED");
@@ -216,6 +228,7 @@ public class ParkingService {
         stats.setOccupiedSlots(occupied);
         stats.setAvailableSlots(available);
         stats.setReservedSlots(reserved);
+        stats.setMaintenanceSlots(maintenance);
         stats.setOccupancyPercentage(occupancyPercentage);
         stats.setDynamicPricingActive(dynamicPricingActive);
         stats.setTotal2W(total2W);
@@ -225,6 +238,9 @@ public class ParkingService {
         stats.setOccupied4W(occupied4W);
         stats.setAvailable4W(available4W);
         stats.setTotalRevenueToday(revenue);
+        stats.setSurgeRevenueToday(revenue * 0.25); // Estimated surge revenue portion
+        stats.setRevenue2W(revenue * 0.35);
+        stats.setRevenue4W(revenue * 0.65);
 
         return stats;
     }

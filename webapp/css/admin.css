@@ -482,6 +482,118 @@
     color: #d8b4fe;
 }
 
+.slot-box.MAINTENANCE {
+    border-color: rgba(148, 163, 184, 0.5);
+    background: rgba(148, 163, 184, 0.08);
+}
+.slot-box.MAINTENANCE:hover {
+    border-color: #94a3b8;
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.3);
+    transform: translateY(-3px);
+}
+.slot-box.MAINTENANCE .slot-icon { color: #94a3b8; }
+.slot-box.MAINTENANCE .slot-status-pill {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+}
+
+/* Sidebar Layout Redesign */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar-wrapper {
+    width: 270px;
+    background: rgba(4, 17, 29, 0.95);
+    backdrop-filter: blur(18px);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 25px 20px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+}
+.sidebar-logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+.sidebar-logo span { color: var(--accent-cyan); }
+.sidebar-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+.sidebar-item:hover, .sidebar-item.active {
+    background: rgba(0, 229, 255, 0.12);
+    color: var(--accent-cyan);
+    border-color: rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+}
+.main-workspace {
+    flex: 1;
+    margin-left: 270px;
+    padding: 25px 30px 60px 30px;
+    transition: margin-left 0.3s ease;
+}
+.top-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    background: rgba(10, 34, 57, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 12px 20px;
+}
+.hamburger-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--accent-cyan);
+    font-size: 22px;
+    cursor: pointer;
+}
+@media (max-width: 992px) {
+    .sidebar-wrapper {
+        transform: translateX(-100%);
+    }
+    .sidebar-wrapper.mobile-open {
+        transform: translateX(0);
+    }
+    .main-workspace {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    .hamburger-btn {
+        display: block;
+    }
+}
+
 .slot-number {
     font-size: 16px;
     font-weight: 800;

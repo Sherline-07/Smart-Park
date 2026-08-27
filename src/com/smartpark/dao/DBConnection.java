@@ -76,6 +76,7 @@ public class DBConnection {
         System.out.println("Initializing Database tables and seed data...");
         try (Statement stmt = conn.createStatement()) {
             // Drop tables if exist
+            try { stmt.execute("DROP TABLE IF EXISTS user_vehicles"); } catch (Exception e) {}
             try { stmt.execute("DROP TABLE IF EXISTS monthly_passes"); } catch (Exception e) {}
             try { stmt.execute("DROP TABLE IF EXISTS reservations"); } catch (Exception e) {}
             try { stmt.execute("DROP TABLE IF EXISTS users"); } catch (Exception e) {}
@@ -103,6 +104,15 @@ public class DBConnection {
                          "default_vehicle_number VARCHAR(20) NULL, " +
                          "default_vehicle_type VARCHAR(10) DEFAULT '4W', " +
                          "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+
+            // 2b. Create user_vehicles table
+            stmt.execute("CREATE TABLE user_vehicles (" +
+                         "vehicle_id INT AUTO_INCREMENT PRIMARY KEY, " +
+                         "user_id INT NOT NULL, " +
+                         "vehicle_number VARCHAR(20) NOT NULL, " +
+                         "vehicle_type VARCHAR(10) DEFAULT '4W', " +
+                         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                         "FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)");
 
             // 3. Create parking_slots table
             stmt.execute("CREATE TABLE parking_slots (" +

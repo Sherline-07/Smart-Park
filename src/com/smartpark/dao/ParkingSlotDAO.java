@@ -135,6 +135,17 @@ public class ParkingSlotDAO {
         return getCountBySql("SELECT COUNT(*) FROM parking_slots WHERE status = 'RESERVED'");
     }
 
+    public int getMaintenanceCount() throws SQLException {
+        return getCountBySql("SELECT COUNT(*) FROM parking_slots WHERE status = 'MAINTENANCE'");
+    }
+
+    public boolean toggleSlotMaintenance(int slotId) throws SQLException {
+        ParkingSlot slot = getSlotById(slotId);
+        if (slot == null) return false;
+        String newStatus = "MAINTENANCE".equalsIgnoreCase(slot.getStatus()) ? "AVAILABLE" : "MAINTENANCE";
+        return updateSlotStatus(slotId, newStatus);
+    }
+
     public int getCountByTypeAndStatus(String vehicleType, String status) throws SQLException {
         String sql = "SELECT COUNT(*) FROM parking_slots WHERE vehicle_type = ? AND status = ?";
         Connection conn = null;

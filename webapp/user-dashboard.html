@@ -53,7 +53,15 @@
                     <form id="preBookForm" onsubmit="handlePreBookSubmit(event)">
                         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="mb-3">
                             <div class="form-group">
-                                <label>Vehicle Number</label>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <label style="margin-bottom:0;">Vehicle Number</label>
+                                    <div>
+                                        <select id="walletSelect" style="font-size: 11px; background: rgba(0,229,255,0.1); color: var(--accent-cyan); border: 1px solid var(--border-cyan); border-radius: 6px; padding: 2px 6px; cursor: pointer;" onchange="selectWalletVehicle(this.value)">
+                                            <option value="">-- Saved Vehicles --</option>
+                                        </select>
+                                        <button type="button" onclick="openAddVehicleModal()" style="font-size: 11px; background: var(--accent-cyan); color: #04111d; border: none; border-radius: 6px; padding: 3px 8px; font-weight: 700; cursor: pointer; margin-left: 4px;">+ Add</button>
+                                    </div>
+                                </div>
                                 <input type="text" id="bookVehicleNumber" class="form-control" placeholder="e.g. TN01AB9999" required style="padding-left: 14px;">
                             </div>
                             <div class="form-group">
@@ -192,36 +200,78 @@
     </div>
 
     <!-- Digital Pass E-Ticket Modal -->
-    <div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
-        <div class="glass-panel" style="max-width: 450px; width: 100%; border-color: var(--accent-cyan); box-shadow: 0 0 50px rgba(0, 229, 255, 0.3); text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🅿️</div>
-            <h3 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 5px;">DIGITAL PARKING PASS</h3>
-            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Show this pass key or vehicle plate at the entry gate</div>
+    <div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(14px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="glass-panel" style="max-width: 520px; width: 100%; border: 1px solid var(--accent-cyan); box-shadow: 0 0 50px rgba(0, 229, 255, 0.35); padding: 30px; border-radius: 24px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); padding-bottom: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 26px;">🅿️</span>
+                    <div>
+                        <div style="font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.5px;">SMART PARK PASS</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Verified Entry Pass</div>
+                    </div>
+                </div>
+                <div id="modalPassCode" class="pass-code-tag" style="font-size: 14px; padding: 4px 12px;">SP-RES-0000</div>
+            </div>
 
-            <div id="modalPassCode" class="pass-code-tag mb-3">SP-RES-0000</div>
+            <!-- Clean 2 Column Body -->
+            <div style="display: grid; grid-template-columns: 140px 1fr; gap: 20px; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 18px; border-radius: 16px; border: 1px solid var(--border-glass);">
+                <div style="text-align: center;">
+                    <div style="background: #fff; border-radius: 12px; padding: 8px; display: inline-block; box-shadow: 0 0 15px rgba(0,229,255,0.3);">
+                        <canvas id="ticketQrCanvas" width="110" height="110"></canvas>
+                    </div>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">Scan at Gate</div>
+                </div>
 
-            <div style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 15px; text-align: left; font-size: 14px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: var(--text-muted);">Vehicle Plate:</span>
-                    <strong id="modalVehicle" style="color: #fff;">TN01AB9999</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: var(--text-muted);">Allocated Slot:</span>
-                    <strong id="modalSlot" style="color: var(--accent-cyan);">A-01</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: var(--text-muted);">Valid Date/Time:</span>
-                    <span id="modalDateTime" style="color: #fff;">-</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-muted);">Fee Paid/Est:</span>
-                    <strong id="modalFee" style="color: #69f0ae;">₹80.00</strong>
+                <div style="font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Vehicle Plate:</span>
+                        <strong id="modalVehicle" style="color: #fff; font-size: 14px;">TN01AB9999</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Reserved Slot:</span>
+                        <strong id="modalSlot" style="color: var(--accent-cyan); font-size: 15px;">A-01</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Valid Time:</span>
+                        <span id="modalDateTime" style="color: #fff;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Fee Status:</span>
+                        <strong id="modalFee" style="color: #69f0ae;">₹80.00</strong>
+                    </div>
                 </div>
             </div>
 
-            <button type="button" class="btn-submit" onclick="closeTicketModal()">
-                Close Pass Ticket
+            <button type="button" class="btn-submit" onclick="closeTicketModal()" style="margin-top: 0;">
+                <i class="fa-solid fa-xmark mr-2"></i> Close Pass Ticket
             </button>
+        </div>
+    </div>
+
+    <!-- Add Vehicle Modal -->
+    <div id="addVehicleModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="glass-panel" style="max-width: 420px; width: 100%; border-color: var(--accent-cyan); padding: 30px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 20px;">
+                <i class="fa-solid fa-car-tunnel text-cyan mr-2"></i> Add Vehicle to Wallet
+            </h3>
+            <form onsubmit="handleSaveVehicleSubmit(event)">
+                <div class="form-group mb-3">
+                    <label>Vehicle Plate Number</label>
+                    <input type="text" id="walletVehicleNumber" class="form-control" placeholder="e.g. TN01AB1234" required style="padding-left: 14px;">
+                </div>
+                <div class="form-group mb-4">
+                    <label>Vehicle Category</label>
+                    <select id="walletVehicleType" class="form-control" style="padding-left: 14px; appearance: auto;">
+                        <option value="4W">Four Wheeler (4W)</option>
+                        <option value="2W">Two Wheeler (2W)</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button type="button" class="btn-submit" onclick="closeAddVehicleModal()" style="background: rgba(255,255,255,0.1); color: #fff; box-shadow: none;">Cancel</button>
+                    <button type="submit" class="btn-submit" style="margin-top: 0;">Save Vehicle</button>
+                </div>
+            </form>
         </div>
     </div>
 

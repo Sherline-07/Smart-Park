@@ -25,7 +25,7 @@ public class UserDAO {
     public boolean register(User user) {
         String sql = "INSERT INTO users (username, password, full_name, email, phone, default_vehicle_number, default_vehicle_type) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getPassword());
             pstmt.setString(3, user.getFullName());
@@ -33,7 +33,25 @@ public class UserDAO {
             pstmt.setString(5, user.getPhone());
             pstmt.setString(6, user.getDefaultVehicleNumber());
             pstmt.setString(7, user.getDefaultVehicleType());
-            return pstmt.executeUpdate() > 0;
+            
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                int newUserId = -1;
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        newUserId = rs.getInt(1);
+                    }
+                }
+                if (newUserId != -1 && user.getDefaultVehicleNumber() != null && !user.getDefaultVehicleNumber().trim().isEmpty()) {
+                    SavedVehicleDAO vehicleDAO = new SavedVehicleDAO();
+                    com.smartpark.model.SavedVehicle sv = new com.smartpark.model.SavedVehicle();
+                    sv.setUserId(newUserId);
+                    sv.setVehicleNumber(user.getDefaultVehicleNumber().trim().toUpperCase());
+                    sv.setVehicleType(user.getDefaultVehicleType());
+                    vehicleDAO.addVehicle(sv);
+                }
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

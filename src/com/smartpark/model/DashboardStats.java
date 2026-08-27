@@ -11,6 +11,7 @@ public class DashboardStats {
     private int availableSlots;
     private int occupiedSlots;
     private int reservedSlots;
+    private int maintenanceSlots;
     private double occupancyPercentage;
     private boolean dynamicPricingActive;
     private int available2W;
@@ -20,6 +21,9 @@ public class DashboardStats {
     private int occupied4W;
     private int total4W;
     private double totalRevenueToday;
+    private double surgeRevenueToday;
+    private double revenue2W;
+    private double revenue4W;
 
     public DashboardStats() {}
 
@@ -34,6 +38,9 @@ public class DashboardStats {
 
     public int getReservedSlots() { return reservedSlots; }
     public void setReservedSlots(int reservedSlots) { this.reservedSlots = reservedSlots; }
+
+    public int getMaintenanceSlots() { return maintenanceSlots; }
+    public void setMaintenanceSlots(int maintenanceSlots) { this.maintenanceSlots = maintenanceSlots; }
 
     public double getOccupancyPercentage() { return occupancyPercentage; }
     public void setOccupancyPercentage(double occupancyPercentage) { this.occupancyPercentage = occupancyPercentage; }
@@ -62,12 +69,22 @@ public class DashboardStats {
     public double getTotalRevenueToday() { return totalRevenueToday; }
     public void setTotalRevenueToday(double totalRevenueToday) { this.totalRevenueToday = totalRevenueToday; }
 
+    public double getSurgeRevenueToday() { return surgeRevenueToday; }
+    public void setSurgeRevenueToday(double surgeRevenueToday) { this.surgeRevenueToday = surgeRevenueToday; }
+
+    public double getRevenue2W() { return revenue2W; }
+    public void setRevenue2W(double revenue2W) { this.revenue2W = revenue2W; }
+
+    public double getRevenue4W() { return revenue4W; }
+    public void setRevenue4W(double revenue4W) { this.revenue4W = revenue4W; }
+
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("totalSlots", totalSlots);
         map.put("availableSlots", availableSlots);
         map.put("occupiedSlots", occupiedSlots);
         map.put("reservedSlots", reservedSlots);
+        map.put("maintenanceSlots", maintenanceSlots);
         map.put("occupancyPercentage", Math.round(occupancyPercentage * 10.0) / 10.0);
         map.put("dynamicPricingActive", dynamicPricingActive);
         map.put("available2W", available2W);
@@ -77,6 +94,9 @@ public class DashboardStats {
         map.put("occupied4W", occupied4W);
         map.put("total4W", total4W);
         map.put("totalRevenueToday", totalRevenueToday);
+        map.put("surgeRevenueToday", surgeRevenueToday);
+        map.put("revenue2W", revenue2W);
+        map.put("revenue4W", revenue4W);
         return map;
     }
 }

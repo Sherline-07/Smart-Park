@@ -8,8 +8,12 @@ CREATE DATABASE IF NOT EXISTS smart_parking;
 USE smart_parking;
 
 -- 2. Drop existing tables if they exist (in reverse FK order)
+DROP TABLE IF EXISTS user_vehicles;
+DROP TABLE IF EXISTS monthly_passes;
+DROP TABLE IF EXISTS reservations;
 DROP TABLE IF EXISTS parking_records;
 DROP TABLE IF EXISTS parking_slots;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS workers;
 
 -- -------------------------------------------------------
@@ -31,7 +35,7 @@ CREATE TABLE parking_slots (
     slot_id INT AUTO_INCREMENT PRIMARY KEY,
     slot_number VARCHAR(20) NOT NULL UNIQUE,
     vehicle_type ENUM('2W', '4W') NOT NULL,
-    status ENUM('AVAILABLE', 'OCCUPIED', 'RESERVED', 'MONTHLY_PASS') DEFAULT 'AVAILABLE',
+    status ENUM('AVAILABLE', 'OCCUPIED', 'RESERVED', 'MONTHLY_PASS', 'MAINTENANCE') DEFAULT 'AVAILABLE',
     floor_level INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -49,6 +53,18 @@ CREATE TABLE users (
     default_vehicle_number VARCHAR(20) NULL,
     default_vehicle_type ENUM('2W', '4W') DEFAULT '4W',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -------------------------------------------------------
+-- 5b. Table: user_vehicles (Customer Vehicle Wallet)
+-- -------------------------------------------------------
+CREATE TABLE user_vehicles (
+    vehicle_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    vehicle_number VARCHAR(20) NOT NULL,
+    vehicle_type ENUM('2W', '4W') NOT NULL DEFAULT '4W',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_uv_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -------------------------------------------------------

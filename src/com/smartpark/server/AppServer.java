@@ -34,7 +34,11 @@ public class AppServer {
         // Register Worker & Admin API Controllers
         server.createContext("/api/auth/login", new AuthController());
         server.createContext("/api/dashboard/stats", new DashboardController());
-        server.createContext("/api/slots", new SlotController());
+        
+        SlotController slotController = new SlotController();
+        server.createContext("/api/slots", slotController);
+        server.createContext("/api/slots/maintenance", slotController);
+
         server.createContext("/api/vehicle/entry", new EntryController());
         server.createContext("/api/vehicle/exit", new ExitController());
         server.createContext("/api/records/history", new HistoryController());
@@ -53,6 +57,11 @@ public class AppServer {
         MonthlyPassController passController = new MonthlyPassController();
         server.createContext("/api/user/passes/subscribe", passController);
         server.createContext("/api/user/passes/list", passController);
+
+        UserVehicleController vehicleController = new UserVehicleController();
+        server.createContext("/api/user/vehicles/list", vehicleController);
+        server.createContext("/api/user/vehicles/add", vehicleController);
+        server.createContext("/api/user/vehicles/delete", vehicleController);
 
         // Register Static Web Assets Handler
         server.createContext("/", new StaticFileHandler());
