@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Park | Worker & Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="css/parking.css">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(10, 34, 57, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 24px;
+            padding: 45px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .login-logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-logo span {
+            color: #00e5ff;
+        }
+
+        .login-logo i {
+            color: #00e5ff;
+            filter: drop-shadow(0 0 15px #00e5ff);
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: rgba(4, 17, 29, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all .25s ease;
+        }
+
+        .form-input:focus {
+            border-color: #00e5ff;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.35);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: #00e5ff;
+            color: #04111d;
+            border: none;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .25s ease;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px #00e5ff;
+        }
+
+        .error-box {
+            display: none;
+            background: rgba(255, 77, 77, 0.15);
+            border: 1px solid rgba(255, 77, 77, 0.4);
+            color: #ff7676;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: left;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-box.show {
+            display: flex;
+        }
+
+        .quick-hint {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .quick-hint span {
+            color: #00e5ff;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fa-solid fa-square-parking"></i>
+                Smart <span>Park</span>
+            </div>
+            <div class="login-subtitle">Worker & Administration Portal</div>
+        </div>
+
+        <div id="errorAlert" class="error-box">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorMessage">Invalid credentials.</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="username" class="form-input" placeholder="Enter username (e.g. admin)" required autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="loginBtn">
+                <i class="fa-solid fa-right-to-bracket"></i> Login to System
+            </button>
+        </form>
+
+        <div class="quick-hint">
+            Demo Credentials: <span onclick="fillDemo('admin', 'admin123')">admin / admin123</span> or <span onclick="fillDemo('worker1', 'worker123')">worker1 / worker123</span>
+        </div>
+    </div>
+</div>
+
+<script src="js/login.js"></script>
+</body>
+</html>

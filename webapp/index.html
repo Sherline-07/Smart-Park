@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Park | Worker & Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="css/parking.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- Top Navigation Header -->
+<header>
+    <a href="#dashboard" class="logo" onclick="switchTab('dashboard')">
+        <i class="fa-solid fa-square-parking"></i>
+        Smart <span>Park</span>
+    </a>
+
+    <nav>
+        <button class="nav-link active" data-tab="dashboard" onclick="switchTab('dashboard')">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </button>
+        <button class="nav-link" data-tab="entry" onclick="switchTab('entry')">
+            <i class="fa-solid fa-car-side"></i> Vehicle Entry
+        </button>
+        <button class="nav-link" data-tab="exit" onclick="switchTab('exit')">
+            <i class="fa-solid fa-receipt"></i> Vehicle Exit & Bill
+        </button>
+        <button class="nav-link" data-tab="slots" onclick="switchTab('slots')">
+            <i class="fa-solid fa-border-all"></i> Parking Slots
+        </button>
+        <button class="nav-link" data-tab="history" onclick="switchTab('history')">
+            <i class="fa-solid fa-clock-rotate-left"></i> History
+        </button>
+    </nav>
+
+    <div class="user-badge">
+        <a href="user-dashboard.html" class="btn-logout" style="background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border-color: var(--accent-cyan); text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-user"></i> Customer Portal
+        </a>
+        <div class="worker-pill">
+            <i class="fa-solid fa-circle-user"></i>
+            <span id="workerNameDisplay">Operator</span>
+        </div>
+        <button class="btn-logout" onclick="logoutWorker()">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </button>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- Dynamic Pricing High-Occupancy Surge Banner -->
+    <div id="dynamicPricingBanner" class="dynamic-pricing-banner">
+        <div class="banner-left">
+            <i class="fa-solid fa-triangle-exclamation banner-icon"></i>
+            <div>
+                <div class="banner-title">High Occupancy Surge Pricing Active!</div>
+                <div class="banner-desc">Lot capacity exceeds 80%. Dynamic rates applied (4W: ₹60/hr, 2W: ₹30/hr).</div>
+            </div>
+        </div>
+        <div class="banner-badge">SURGE ACTIVE</div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TAB 1: DASHBOARD OVERVIEW -->
+    <!-- ======================================================= -->
+    <div id="tab-dashboard" class="tab-content active">
+        
+        <!-- Live Slot Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="glass-panel metric-card card-cyan">
+                <div class="metric-info">
+                    <div class="label">Total Slots</div>
+                    <div class="val" id="statTotalSlots">--</div>
+                </div>
+                <div class="metric-icon-wrap">
+                    <i class="fa-solid fa-square-parking"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel metric-card card-green">
+                <div class="metric-info">
+                    <div class="label">Available Slots</div>
+                    <div class="val" id="statAvailableSlots">--</div>
+                </div>
+                <div class="metric-icon-wrap">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel metric-card card-red">
+                <div class="metric-info">
+                    <div class="label">Occupied Slots</div>
+                    <div class="val" id="statOccupiedSlots">--</div>
+                </div>
+                <div class="metric-icon-wrap">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel metric-card card-orange">
+                <div class="metric-info">
+                    <div class="label">Occupancy Rate</div>
+                    <div class="val" id="statOccupancyRate">0%</div>
+                </div>
+                <div class="metric-icon-wrap">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Occupancy Progress Bar -->
+        <div class="glass-panel occupancy-meter-card">
+            <div class="meter-header">
+                <div class="meter-title">
+                    <i class="fa-solid fa-chart-simple" style="color: var(--accent-cyan)"></i>
+                    Real-time Facility Occupancy
+                </div>
+                <div class="meter-percentage" id="meterPercentageText">0%</div>
+            </div>
+            <div class="progress-track">
+                <div id="occupancyProgressBar" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats & Quick Controls Grid -->
+        <div class="form-grid-layout" style="margin-bottom: 25px;">
+            <!-- Category Breakdown -->
+            <div class="glass-panel">
+                <div class="section-header" style="margin-bottom: 16px;">
+                    <div class="section-title">
+                        <i class="fa-solid fa-layer-group"></i> Category Breakdown
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="background: rgba(4, 17, 29, 0.7); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-weight: 700; color: #fff;"><i class="fa-solid fa-car" style="color:#c084fc; margin-right:6px;"></i> 4-Wheeler</span>
+                            <span class="type-pill type-4w" id="stat4WTotal">-- Total</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">
+                            Available: <strong style="color: var(--accent-green);" id="stat4WAvail">--</strong> | Occupied: <strong style="color: var(--accent-red);" id="stat4WOcc">--</strong>
+                        </div>
+                        <div style="font-size: 11px; color: var(--accent-cyan); margin-top: 6px;">Base Rate: ₹40/hr</div>
+                    </div>
+
+                    <div style="background: rgba(4, 17, 29, 0.7); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-weight: 700; color: #fff;"><i class="fa-solid fa-motorcycle" style="color:#38bdf8; margin-right:6px;"></i> 2-Wheeler</span>
+                            <span class="type-pill type-2w" id="stat2WTotal">-- Total</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">
+                            Available: <strong style="color: var(--accent-green);" id="stat2WAvail">--</strong> | Occupied: <strong style="color: var(--accent-red);" id="stat2WOcc">--</strong>
+                        </div>
+                        <div style="font-size: 11px; color: var(--accent-cyan); margin-top: 6px;">Base Rate: ₹20/hr</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Shortcuts -->
+            <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="section-header" style="margin-bottom: 12px;">
+                    <div class="section-title">
+                        <i class="fa-solid fa-bolt"></i> Quick Actions
+                    </div>
+                    <button onclick="refreshDashboard()" class="filter-btn" style="padding: 4px 12px; font-size: 12px;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                    </button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button class="btn-primary" onclick="switchTab('entry')">
+                        <i class="fa-solid fa-plus-circle"></i> Check In Vehicle
+                    </button>
+                    <button class="btn-primary btn-exit" onclick="switchTab('exit')">
+                        <i class="fa-solid fa-receipt"></i> Checkout & Bill
+                    </button>
+                </div>
+                <div style="margin-top: 14px; font-size: 12px; color: var(--text-muted); text-align: center;">
+                    System connects live to MySQL with automatic slot assignment & billing.
+                </div>
+            </div>
+        </div>
+
+        <!-- Currently Active Parked Vehicles List -->
+        <div class="glass-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-car-tunnel"></i> Currently Parked Vehicles
+                </div>
+                <span id="activeVehicleCountBadge" class="filter-btn active">0 Vehicles Active</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Vehicle Number</th>
+                            <th>Category</th>
+                            <th>Slot</th>
+                            <th>Entry Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeVehiclesTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading active parking records...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TAB 2: VEHICLE ENTRY -->
+    <!-- ======================================================= -->
+    <div id="tab-entry" class="tab-content">
+        <div class="form-grid-layout">
+            
+            <!-- Check-in Form -->
+            <div class="glass-panel">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fa-solid fa-right-to-bracket"></i> Vehicle Check-In & Entry
+                    </div>
+                </div>
+
+                <form id="vehicleEntryForm">
+                    <div class="form-group">
+                        <label for="entryVehicleNo">Vehicle Registration Number</label>
+                        <input type="text" id="entryVehicleNo" class="form-control" 
+                               placeholder="e.g. TN01AB1234, DL04C9988" required autocomplete="off"
+                               style="text-transform: uppercase; font-weight: 700; font-size: 16px; letter-spacing: 1px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Vehicle Category</label>
+                        <div class="category-selector">
+                            <div class="category-card selected" id="catCard4W" onclick="selectEntryCategory('4W')">
+                                <i class="fa-solid fa-car"></i>
+                                <span class="cat-name">Four Wheeler (4W)</span>
+                                <span class="cat-rate">Base: ₹40/hr</span>
+                            </div>
+                            <div class="category-card" id="catCard2W" onclick="selectEntryCategory('2W')">
+                                <i class="fa-solid fa-motorcycle"></i>
+                                <span class="cat-name">Two Wheeler (2W)</span>
+                                <span class="cat-rate">Base: ₹20/hr</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="entryVehicleType" value="4W">
+                    </div>
+
+                    <div id="entryAvailabilityStatus" style="background: rgba(4, 17, 29, 0.7); padding: 14px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-glass);">
+                        <i class="fa-solid fa-circle-check" style="color: var(--accent-green);"></i>
+                        <span>Slot will be automatically assigned upon entry submission.</span>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="btnSubmitEntry">
+                        <i class="fa-solid fa-key"></i> Allocate Slot & Confirm Entry
+                    </button>
+                </form>
+            </div>
+
+            <!-- Rules & Guidance Panel -->
+            <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fa-solid fa-circle-info"></i> Automated Allocation Rules
+                        </div>
+                    </div>
+                    
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #cbd5e1;">
+                        <li style="display: flex; gap: 10px;">
+                            <i class="fa-solid fa-robot" style="color: var(--accent-cyan); margin-top: 3px;"></i>
+                            <span><strong>Automatic Slot Allocation:</strong> The system identifies and allocates the next compatible available slot automatically. Manual assignment is prevented to avoid collisions.</span>
+                        </li>
+                        <li style="display: flex; gap: 10px;">
+                            <i class="fa-solid fa-shield-halved" style="color: var(--accent-green); margin-top: 3px;"></i>
+                            <span><strong>Duplicate Protection:</strong> Vehicles already checked in cannot be re-entered until the active parking session is settled.</span>
+                        </li>
+                        <li style="display: flex; gap: 10px;">
+                            <i class="fa-solid fa-clock" style="color: var(--accent-orange); margin-top: 3px;"></i>
+                            <span><strong>Timestamp Recording:</strong> Entry timestamp is recorded down to the exact second in MySQL.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="background: rgba(0, 229, 255, 0.06); border: 1px solid var(--border-cyan); border-radius: 12px; padding: 16px; margin-top: 20px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;">OPERATOR TIP</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">After entry confirmation, hand over the assigned slot number slip to the vehicle driver.</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TAB 3: VEHICLE EXIT & BILLING -->
+    <!-- ======================================================= -->
+    <div id="tab-exit" class="tab-content">
+        <div class="form-grid-layout">
+
+            <!-- Check-Out Form -->
+            <div class="glass-panel">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Vehicle Check-Out & Billing
+                    </div>
+                </div>
+
+                <form id="vehicleExitForm">
+                    <div class="form-group">
+                        <label for="exitVehicleNo">Vehicle Registration Number</label>
+                        <input type="text" id="exitVehicleNo" class="form-control" list="activeVehiclesDatalist"
+                               placeholder="Search or enter plate (e.g. TN01AB1234)" required autocomplete="off"
+                               style="text-transform: uppercase; font-weight: 700; font-size: 16px; letter-spacing: 1px;">
+                        <datalist id="activeVehiclesDatalist"></datalist>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-exit" id="btnSubmitExit">
+                        <i class="fa-solid fa-calculator"></i> Calculate Duration & Generate Bill
+                    </button>
+                </form>
+            </div>
+
+            <!-- Billing Rules & Rounding Info -->
+            <div class="glass-panel">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fa-solid fa-receipt"></i> Billing & Pricing Policy
+                    </div>
+                </div>
+
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #cbd5e1;">
+                    <li style="display: flex; gap: 10px;">
+                        <i class="fa-solid fa-hourglass-half" style="color: var(--accent-cyan); margin-top: 3px;"></i>
+                        <span><strong>Duration Rounding Rule:</strong> First hour is charged as a full hour. Any additional fractional hour rounds up to the next full hour (e.g. 1 hr 10 min = 2 hrs; 3.5 hrs = 4 hrs).</span>
+                    </li>
+                    <li style="display: flex; gap: 10px;">
+                        <i class="fa-solid fa-arrow-trend-up" style="color: var(--accent-red); margin-top: 3px;"></i>
+                        <span><strong>Dynamic Surge Pricing:</strong> If total parking occupancy is <strong>&gt; 80%</strong>, high occupancy rates apply (2W: ₹30/hr, 4W: ₹60/hr).</span>
+                    </li>
+                    <li style="display: flex; gap: 10px;">
+                        <i class="fa-solid fa-unlock" style="color: var(--accent-green); margin-top: 3px;"></i>
+                        <span><strong>Slot Release:</strong> As soon as checkout completes, the assigned slot immediately transitions to <strong>AVAILABLE</strong> for new vehicles.</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TAB 4: PARKING SLOTS VISUAL GRID -->
+    <!-- ======================================================= -->
+    <div id="tab-slots" class="tab-content">
+        <div class="glass-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-border-all"></i> Facility Parking Slots Grid
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="slot-filters">
+                    <button class="filter-btn active" onclick="filterSlots('ALL')">All (<span id="countFilterAll">0</span>)</button>
+                    <button class="filter-btn" onclick="filterSlots('4W')">4-Wheeler (<span id="countFilter4W">0</span>)</button>
+                    <button class="filter-btn" onclick="filterSlots('2W')">2-Wheeler (<span id="countFilter2W">0</span>)</button>
+                    <button class="filter-btn" onclick="filterSlots('AVAILABLE')">Available</button>
+                    <button class="filter-btn" onclick="filterSlots('OCCUPIED')">Occupied</button>
+                    <button class="filter-btn" onclick="filterSlots('RESERVED')">Pre-Booked</button>
+                    <button class="filter-btn" onclick="filterSlots('MONTHLY_PASS')">Monthly Pass</button>
+                </div>
+            </div>
+
+            <!-- Slots Visual Grid Container -->
+            <div id="slotsGridContainer" class="slots-grid">
+                <!-- Dynamically loaded via app.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- TAB 5: PARKING HISTORY -->
+    <!-- ======================================================= -->
+    <div id="tab-history" class="tab-content">
+        <div class="glass-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Completed Parking Transactions
+                </div>
+                <div>
+                    <input type="text" id="historySearchInput" placeholder="Filter by vehicle plate..." 
+                           oninput="filterHistoryTable()" 
+                           style="padding: 8px 14px; background: rgba(4,17,29,0.8); border: 1px solid var(--border-glass); border-radius: 20px; color:#fff; font-size:13px; outline:none;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Bill ID</th>
+                            <th>Vehicle Number</th>
+                            <th>Category</th>
+                            <th>Slot</th>
+                            <th>Entry Time</th>
+                            <th>Exit Time</th>
+                            <th>Duration</th>
+                            <th>Rate Applied</th>
+                            <th>Total Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading parking history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ======================================================= -->
+<!-- MODAL: ENTRY CONFIRMATION SUCCESS -->
+<!-- ======================================================= -->
+<div id="entrySuccessModal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('entrySuccessModal')">&times;</span>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-check" style="font-size: 52px; color: var(--accent-green); filter: drop-shadow(0 0 15px rgba(0,230,118,0.5));"></i>
+            <h2 style="font-size: 22px; color: #fff; margin-top: 12px;">Vehicle Check-In Successful!</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">Slot allocated and entry timestamp recorded in database.</p>
+        </div>
+
+        <div style="background: rgba(4, 17, 29, 0.85); border: 1px solid var(--border-cyan); border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+            <div class="receipt-row">
+                <span class="r-label">Vehicle Number</span>
+                <span class="r-val plate-badge" id="modalEntryPlate">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Vehicle Category</span>
+                <span class="r-val" id="modalEntryType">--</span>
+            </div>
+            <div class="receipt-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-glass);">
+                <span class="r-label" style="font-size: 15px; font-weight: 700; color: #fff;">Assigned Slot</span>
+                <span class="r-val" id="modalEntrySlot" style="font-size: 22px; font-weight: 800; color: var(--accent-cyan); text-shadow: 0 0 12px var(--accent-cyan-glow);">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Entry Timestamp</span>
+                <span class="r-val" id="modalEntryTime">--</span>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="closeModal('entrySuccessModal')">
+            <i class="fa-solid fa-check"></i> Acknowledge & Done
+        </button>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MODAL: EXIT & BILL RECEIPT INVOICE -->
+<!-- ======================================================= -->
+<div id="exitReceiptModal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="modal-close" onclick="closeModal('exitReceiptModal')">&times;</span>
+        
+        <!-- Printed Receipt Card -->
+        <div class="bill-receipt-card" id="printableReceipt">
+            <div class="receipt-header">
+                <div class="r-logo"><i class="fa-solid fa-square-parking"></i> SMART PARK</div>
+                <div class="r-sub">Automated Parking & Billing Receipt</div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;" id="receiptBillId">Invoice #--</div>
+            </div>
+
+            <div class="receipt-row">
+                <span class="r-label">Vehicle Plate</span>
+                <span class="r-val plate-badge" id="receiptPlate">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Category</span>
+                <span class="r-val" id="receiptCategory">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Released Slot</span>
+                <span class="r-val" id="receiptSlot" style="color: var(--accent-cyan); font-weight: 800;">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Entry Time</span>
+                <span class="r-val" id="receiptEntryTime">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Exit Time</span>
+                <span class="r-val" id="receiptExitTime">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Actual Duration</span>
+                <span class="r-val" id="receiptDuration">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Billable Hours</span>
+                <span class="r-val" id="receiptBillableHours">--</span>
+            </div>
+            <div class="receipt-row">
+                <span class="r-label">Rate Applied</span>
+                <span class="r-val" id="receiptRate">--</span>
+            </div>
+
+            <div id="receiptSurgeNotice" style="display:none;">
+                <div class="surge-tag"><i class="fa-solid fa-triangle-exclamation"></i> Dynamic Surge Rate (>80% Occupancy)</div>
+            </div>
+
+            <div class="receipt-total-row">
+                <span class="r-label">TOTAL AMOUNT DUE</span>
+                <span class="r-amount" id="receiptTotalAmount">₹0.00</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="btn-primary" onclick="window.print()" style="background: rgba(255,255,255,0.1); color:#fff; box-shadow:none;">
+                <i class="fa-solid fa-print"></i> Print Bill
+            </button>
+            <button class="btn-primary" onclick="closeModal('exitReceiptModal')">
+                <i class="fa-solid fa-circle-check"></i> Settle & Release
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications Container -->
+<div id="toastContainer"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

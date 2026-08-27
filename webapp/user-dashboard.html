@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Hub — Smart Park System</title>
+    <link rel="stylesheet" href="css/parking.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Header Navigation -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-square-parking text-cyan"></i> SMART PARK
+            <span class="logo-subtitle">Customer Portal</span>
+        </div>
+        <div class="user-header-info">
+            <div class="user-badge" id="userBadgeHeader">
+                <i class="fa-solid fa-user-check mr-1"></i> <span id="headerUserName">Customer</span>
+            </div>
+            <button type="button" class="btn btn-outline-red" onclick="handleUserLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <div class="tab-navigation mb-4" style="display: flex; gap: 15px; background: rgba(10,34,57,0.7); padding: 8px; border-radius: 16px; border: 1px solid var(--border-glass);">
+            <button type="button" class="tab-btn active" id="btnTabBooking" onclick="switchUserTab('booking')" style="flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; color: #fff; background: var(--accent-cyan); color: #04111d; cursor: pointer;">
+                <i class="fa-solid fa-calendar-check mr-2"></i> Pre-Book Parking Slot
+            </button>
+            <button type="button" class="tab-btn" id="btnTabMonthly" onclick="switchUserTab('monthly')" style="flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; color: var(--text-muted); background: transparent; cursor: pointer;">
+                <i class="fa-solid fa-route mr-2"></i> Daily Commuter Monthly Pass
+            </button>
+            <button type="button" class="tab-btn" id="btnTabHistory" onclick="switchUserTab('history')" style="flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; color: var(--text-muted); background: transparent; cursor: pointer;">
+                <i class="fa-solid fa-ticket mr-2"></i> My Passes & Tickets
+            </button>
+        </div>
+
+        <div id="userAlertBox" class="alert-box mb-4"></div>
+
+        <!-- TAB 1: PRE-BOOK PARKING SLOT -->
+        <div id="tabBookingContent">
+            <div class="grid-2-1" style="display: grid; grid-template-columns: 1fr 380px; gap: 25px;">
+                <!-- Left: Booking Form -->
+                <div class="glass-panel">
+                    <h2 class="section-title mb-3" style="font-size: 20px; font-weight: 700; color: #fff;">
+                        <i class="fa-solid fa-square-plus text-cyan mr-2"></i> Advance Slot Reservation
+                    </h2>
+                    <form id="preBookForm" onsubmit="handlePreBookSubmit(event)">
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="mb-3">
+                            <div class="form-group">
+                                <label>Vehicle Number</label>
+                                <input type="text" id="bookVehicleNumber" class="form-control" placeholder="e.g. TN01AB9999" required style="padding-left: 14px;">
+                            </div>
+                            <div class="form-group">
+                                <label>Vehicle Category</label>
+                                <select id="bookVehicleType" class="form-control" style="padding-left: 14px; appearance: auto;" onchange="loadAvailableSlotsForBooking()">
+                                    <option value="4W">Four Wheeler (4W) — ₹40/hr</option>
+                                    <option value="2W">Two Wheeler (2W) — ₹20/hr</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="mb-3">
+                            <div class="form-group">
+                                <label>Scheduled Entry Date & Time</label>
+                                <input type="datetime-local" id="bookEntryTime" class="form-control" style="padding-left: 14px;" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Estimated Parking Duration</label>
+                                <select id="bookDuration" class="form-control" style="padding-left: 14px; appearance: auto;" onchange="updateBookingFareEstimate()">
+                                    <option value="1">1 Hour</option>
+                                    <option value="2" selected>2 Hours</option>
+                                    <option value="4">4 Hours</option>
+                                    <option value="8">8 Hours (Full Day)</option>
+                                    <option value="12">12 Hours</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Select Parking Slot (Optional — or Auto-Assign Best Available)</label>
+                            <div id="bookingSlotGrid" class="slot-select-box">
+                                <span style="color: var(--text-muted); font-size: 13px;">Loading available slots...</span>
+                            </div>
+                            <input type="hidden" id="selectedSlotId" value="">
+                        </div>
+
+                        <button type="submit" class="btn-submit" style="margin-top: 15px;">
+                            <i class="fa-solid fa-bolt mr-2"></i> Confirm Pre-Booking & Reserve Slot
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Summary Card & Pricing -->
+                <div class="glass-panel">
+                    <h3 class="section-title mb-3" style="font-size: 18px; font-weight: 700; color: #fff;">
+                        <i class="fa-solid fa-receipt text-cyan mr-2"></i> Reservation Fare Summary
+                    </h3>
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 14px; padding: 20px; border: 1px solid var(--border-glass);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--text-muted);">
+                            <span>Base Rate:</span>
+                            <span id="summaryBaseRate" style="color: #fff; font-weight: 600;">₹40.00 / hr</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--text-muted);">
+                            <span>Duration:</span>
+                            <span id="summaryDuration" style="color: #fff; font-weight: 600;">2 Hours</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--text-muted);">
+                            <span>Selected Slot:</span>
+                            <span id="summarySlot" style="color: var(--accent-cyan); font-weight: 700;">Auto-Allocated</span>
+                        </div>
+                        <hr style="border-color: var(--border-glass); margin: 15px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: #fff; font-size: 16px;">Estimated Total:</span>
+                            <span id="summaryTotalFee" style="font-size: 26px; font-weight: 800; color: var(--accent-cyan);">₹80.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: DAILY COMMUTER MONTHLY PASS -->
+        <div id="tabMonthlyContent" style="display: none;">
+            <div class="glass-panel mb-4">
+                <h2 class="section-title mb-2" style="font-size: 22px; font-weight: 800; color: #fff;">
+                    <i class="fa-solid fa-id-card-clip text-cyan mr-2"></i> Daily Commuter Monthly Pass Subscriptions
+                </h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">
+                    Coming to work daily? Save time and avoid booking every single day! Reserve your slot for 1 or 3 months in advance with priority access and discounted rates.
+                </p>
+
+                <!-- Plan Selector Cards -->
+                <div class="plan-card-grid">
+                    <div class="plan-card" id="planCard1" onclick="selectPassPlan(1, 2500, 1200)">
+                        <div class="plan-title" style="font-size: 18px; font-weight: 700; color: #fff;">1 Month Regular Pass</div>
+                        <div class="plan-price" id="planPrice1">₹2,500 <span>/ month</span></div>
+                        <p style="font-size: 13px; color: var(--text-muted);">Standard 30-day unlimited commuter parking slot reservation.</p>
+                    </div>
+
+                    <div class="plan-card recommended" id="planCard3" onclick="selectPassPlan(3, 6750, 3240)">
+                        <div class="plan-badge">SAVE 10% DISCOUNT</div>
+                        <div class="plan-title" style="font-size: 18px; font-weight: 700; color: #fff;">3 Months Quarter Pass</div>
+                        <div class="plan-price" id="planPrice3">₹2,250 <span>/ mo (₹6,750 Total)</span></div>
+                        <p style="font-size: 13px; color: #d8b4fe;">Best value for daily office workers! Guaranteed slot lock.</p>
+                    </div>
+                </div>
+
+                <!-- Monthly Pass Subscription Form -->
+                <form id="monthlyPassForm" onsubmit="handleMonthlyPassSubmit(event)" style="max-width: 600px;">
+                    <input type="hidden" id="selectedPassMonths" value="1">
+                    <div class="form-group mb-3">
+                        <label>Vehicle Number</label>
+                        <input type="text" id="passVehicleNumber" class="form-control" placeholder="e.g. TN01WORKER" required style="padding-left: 14px;">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Vehicle Category</label>
+                        <select id="passVehicleType" class="form-control" style="padding-left: 14px; appearance: auto;" onchange="updateMonthlyPassPrices()">
+                            <option value="4W">Four Wheeler (4W)</option>
+                            <option value="2W">Two Wheeler (2W)</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Select Preferred Reserved Slot for Month</label>
+                        <div id="passSlotGrid" class="slot-select-box">
+                            <span style="color: var(--text-muted); font-size: 13px;">Loading available slots...</span>
+                        </div>
+                        <input type="hidden" id="passSelectedSlotId" value="">
+                    </div>
+                    <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);">
+                        <i class="fa-solid fa-credit-card mr-2"></i> Subscribe & Reserve Monthly Commuter Pass
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: MY PASSES & TICKETS -->
+        <div id="tabHistoryContent" style="display: none;">
+            <div class="glass-panel">
+                <h2 class="section-title mb-3" style="font-size: 20px; font-weight: 700; color: #fff;">
+                    <i class="fa-solid fa-ticket-simple text-cyan mr-2"></i> Active Pre-Bookings & Monthly Passes
+                </h2>
+                <div id="userTicketsList">
+                    <p style="color: var(--text-muted); font-size: 14px;">Loading your digital tickets...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Digital Pass E-Ticket Modal -->
+    <div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="glass-panel" style="max-width: 450px; width: 100%; border-color: var(--accent-cyan); box-shadow: 0 0 50px rgba(0, 229, 255, 0.3); text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🅿️</div>
+            <h3 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 5px;">DIGITAL PARKING PASS</h3>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Show this pass key or vehicle plate at the entry gate</div>
+
+            <div id="modalPassCode" class="pass-code-tag mb-3">SP-RES-0000</div>
+
+            <div style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 15px; text-align: left; font-size: 14px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Vehicle Plate:</span>
+                    <strong id="modalVehicle" style="color: #fff;">TN01AB9999</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Allocated Slot:</span>
+                    <strong id="modalSlot" style="color: var(--accent-cyan);">A-01</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Valid Date/Time:</span>
+                    <span id="modalDateTime" style="color: #fff;">-</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Fee Paid/Est:</span>
+                    <strong id="modalFee" style="color: #69f0ae;">₹80.00</strong>
+                </div>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="closeTicketModal()">
+                Close Pass Ticket
+            </button>
+        </div>
+    </div>
+
+    <script src="js/user-app.js"></script>
+</body>
+</html>
